@@ -63,10 +63,12 @@ import com.liferay.portal.model.LayoutConstants;
 import com.liferay.portal.model.LayoutTypePortlet;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.WorkflowDefinitionLink;
+import com.liferay.portal.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.service.LayoutServiceUtil;
 import com.liferay.portal.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.UserLocalServiceUtil;
+import com.liferay.portal.service.UserServiceUtil;
 import com.liferay.portal.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortletKeys;
@@ -82,6 +84,9 @@ import com.liferay.portlet.blogs.model.BlogsEntry;
 import com.liferay.portlet.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.service.JournalArticleServiceUtil;
+import com.liferay.portlet.messageboards.model.MBMessage;
+import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
+import com.liferay.portlet.messageboards.service.MBMessageServiceUtil;
 
 /**
  * @author Juan Fernández
@@ -96,12 +101,13 @@ public class WordpressImporterUtil {
 		Map<String, Integer> results = new HashMap<String, Integer>();
 
 		_categoriesCount = 0;
+		_commentsCount = 0;
 		_entriesCount = 0;
 		_pagesCount = 0;
 		_tagsCount = 0;
 
-		ThemeDisplay themeDisplay = (ThemeDisplay) request
-				.getAttribute(WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		ServiceContext serviceContext = new ServiceContext();
 		serviceContext.setAddGuestPermissions(true);
@@ -115,11 +121,11 @@ public class WordpressImporterUtil {
 
 		try {
 			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
-					.newInstance();
+				.newInstance();
 			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 
 			InputStreamReader isr = new InputStreamReader(new FileInputStream(
-					file), "UTF-8");
+				file), "UTF-8");
 			InvalidXmlFilterReader ixfr = new InvalidXmlFilterReader(isr);
 			Document doc = docBuilder.parse(new InputSource(ixfr));
 
@@ -136,111 +142,47 @@ public class WordpressImporterUtil {
 					Element itemElement = (Element) item;
 
 					// Title of the item
-
-					NodeList titleList = 
-						itemElement.getElementsByTagName("title");
-					Element titleElement = (Element) titleList.item(0);
-					String titleValue = titleElement.getTextContent().trim();
+					
+					String titleValue = getItemTagValue(itemElement, "title");
 
 					// Item type
-
-					NodeList postTypeList = 
-						itemElement.getElementsByTagName("wp:post_type");
-					Element postTypeElement = (Element) postTypeList.item(0);
-					NodeList textpostTypeList = postTypeElement.getChildNodes();
-					String postTypeValue = ((Node) textpostTypeList.item(0))
-							.getNodeValue().trim();
-
+					
+					String postTypeValue = getItemTagValue(
+						itemElement, "wp:post_type");
+										
 					// Post id
 
-					NodeList postIdList = 
-						itemElement.getElementsByTagName("wp:post_id");
-					Element postIdElement = (Element) postIdList.item(0);
-					NodeList textpostIdList = postIdElement.getChildNodes();
-					String postIdValue = 
-						((Node)textpostIdList.item(0)).getNodeValue().trim();
+					String postIdValue = getItemTagValue(
+						itemElement, "wp:post_id");
 
 					// Post parent
 
-					NodeList postParentList = 
-						itemElement.getElementsByTagName("wp:post_parent");
-					Element postParentElement = 
-						(Element) postParentList.item(0);
-					NodeList textpostParentList = 
-						postParentElement.getChildNodes();
-					String postParentValue = StringPool.BLANK;
-
-					if (textpostParentList.getLength() > 0) {
-						Node postParentNode = 
-							((Node) textpostParentList.item(0));
-
-						postParentValue = postParentNode.getNodeValue().trim();
-					}
+					String postParentValue = getItemFirstChildTagValue(
+						itemElement, "wp:post_parent");
 
 					// Content
 
-					NodeList contentList = 
-						itemElement.getElementsByTagName("content:encoded");
-					Element contentElement = (Element) contentList.item(0);
-					NodeList textContentList = contentElement.getChildNodes();
-					String contentValue = StringPool.BLANK;
-
-					if (textContentList.getLength() > 0) {
-						Node contentNode = ((Node) textContentList.item(0));
-						contentValue = contentNode.getNodeValue().trim();
-					}
+					String contentValue = getItemFirstChildTagValue(
+						itemElement, "content:encoded");
 					
 					contentValue = formatContent(contentValue);
 
 					// Description
 
-					NodeList descriptionList = 
-						itemElement.getElementsByTagName("description");
-					Element descriptionElement = 
-						(Element) descriptionList.item(0);
-					NodeList textDescriptionList = 
-						descriptionElement.getChildNodes();
-					String descriptionValue = StringPool.BLANK;
-
-					if (textDescriptionList.getLength() > 0) {
-						Node descriptionNode = 
-							(Node)textDescriptionList.item(0);
-						descriptionValue = 
-							descriptionNode.getNodeValue().trim();
-					}
+					String descriptionValue = getItemFirstChildTagValue(
+						itemElement, "description");
 
 					// Item Link
 
-					NodeList linkList = 
-						itemElement.getElementsByTagName("link");
-					Element linkElement = (Element) linkList.item(0);
-					NodeList textLinkList = linkElement.getChildNodes();
-					String linkValue = StringPool.BLANK;
-
-					if (textLinkList.getLength() > 0) {
-						linkValue = 
-							((Node)textLinkList.item(0)).getNodeValue().trim();
-					}
+					String linkValue = getItemFirstChildTagValue(
+						itemElement, "link");
 
 					// Configuration preferences
-
+					
 					PortletPreferences preferences = request.getPreferences();
-
-					boolean importBlogEntries = 
-						GetterUtil.getBoolean(preferences.getValue(
-							"importBlogEntries", StringPool.TRUE));
-
-					boolean importTags = GetterUtil.getBoolean(
-						preferences.getValue("importTags", StringPool.TRUE));
-
-					boolean importCategories = 
-						GetterUtil.getBoolean(preferences.getValue("importTags",
-							StringPool.TRUE));
-
-					boolean importPages = 
-						GetterUtil.getBoolean(preferences.getValue(
-							"importPages", StringPool.TRUE));
-
+					
+					updatePreferences(preferences);					
+					
 					BaseFilter filter = new BaseFilter();
 
                     String[] assetTagNames = 
@@ -289,29 +231,27 @@ public class WordpressImporterUtil {
 					}
                   
 					if (WordpressImporterUtil.TYPE_PAGE.equals(postTypeValue)
-							&& importPages) {
+							&& _importPages) {
 
 						// Manage pages
 
 						addPageAndContent(themeDisplay, serviceContext,
-								parentLayouts, titleValue, postIdValue,
-								postParentValue, descriptionValue, 
-								contentValue);
+							parentLayouts, titleValue, postIdValue, 
+							postParentValue, descriptionValue, contentValue);
 
 						_pagesCount++;
 
-					} else if (WordpressImporterUtil.TYPE_POST
-							.equals(postTypeValue)) {
+					} else if (WordpressImporterUtil.TYPE_POST.equals(
+							postTypeValue)) {
 
+						// Manage blog entry & its comments
+						
 						if (Validator.isNotNull(contentValue)) {
-
-							// Manage blog entries
-
 							addBlogEntry(themeDisplay, serviceContext,
-									importedTagNames, importedCategoryNames,
-									itemElement, titleValue, contentValue,
-									importBlogEntries, importTags,
-									importCategories, userMapping);
+								importedTagNames, importedCategoryNames,
+								itemElement, titleValue, contentValue,
+								_importBlogEntries, _importTags,
+								_importCategories, userMapping);
 						}
 					}
 				}
@@ -328,18 +268,62 @@ public class WordpressImporterUtil {
 		}
 
 		finally {
-
 			results.put("categoriesCount", _categoriesCount);
+			results.put("commentsCount", _commentsCount);
 			results.put("entriesCount", _entriesCount);
 			results.put("tagsCount", _tagsCount);
 			results.put("pagesCount", _pagesCount);
 
-			System.out.println("Import ended");
+			System.out.println("Import finished");
 		}
 
 		return results;
 	}
 
+	private static User addAnonymousUser(
+		long companyId, String nickName, String emailAddress, 
+		ServiceContext serviceContext) throws PortalException, SystemException {		
+
+		boolean autoPassword = true;
+		String password1 = null;
+		String password2 = null;
+		boolean autoScreenName = true;
+		String screenName = nickName;
+		long facebookId = 0;
+		String openId = StringPool.BLANK;
+		String firstName = nickName;
+		String lastName = nickName;
+		int prefixId = 0;
+		int suffixId = 0;
+		boolean male = true;
+		int birthdayMonth = 0;
+		int birthdayDay = 1;
+		int birthdayYear = 1970;
+		String jobTitle = null;
+		long[] groupIds = null;
+		long[] organizationIds = null;
+		long[] roleIds = null;
+		long[] userGroupIds = null;
+		boolean sendEmail = false;
+
+		serviceContext.setAttribute("anonymousUser", true);
+
+		// Default locale is English
+		Locale locale = new Locale ("en_US");
+
+		User user = UserServiceUtil.addUser(
+			companyId, autoPassword, password1, password2,
+			autoScreenName, screenName, emailAddress, facebookId, openId,
+			locale, firstName, null, lastName, prefixId,
+			suffixId, male, birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			groupIds, organizationIds, roleIds, userGroupIds, sendEmail,
+			serviceContext);
+
+		UserLocalServiceUtil.updateStatus(user.getUserId(), STATUS_INCOMPLETE);
+		
+		return user;		
+	}
+	
 	private static void addBlogEntry(ThemeDisplay themeDisplay,
 			ServiceContext serviceContext, List<String> importedTagNames,
 			List<String> importedCategoryNames, Element itemElement,
@@ -555,17 +539,21 @@ public class WordpressImporterUtil {
 				InputStream smallImageInputStream = null;
 				
 				BlogsEntry entry = 
-                	BlogsEntryLocalServiceUtil.addEntry(userId, title, description,
-                        content, displayDateMonth, displayDateDay,
-                        displayDateYear, displayDateHour, displayDateMinute,
-                        allowPingbacks, allowTrackbacks, trackbacks,
-                        smallImage, smallImageURL, smallImageFileName, smallImageInputStream,
-                        serviceContext);
+                	BlogsEntryLocalServiceUtil.addEntry(
+            			userId, title, description, content, displayDateMonth, 
+            			displayDateDay, displayDateYear, displayDateHour, 
+            			displayDateMinute, allowPingbacks, allowTrackbacks, 
+            			trackbacks, smallImage, smallImageURL, 
+            			smallImageFileName, smallImageInputStream, 
+            			serviceContext);
 
 				_entriesCount++;
+				
+				// Import comments (TBD)
+				
+				importBlogsEntryComments(entry, itemElement, serviceContext);			
+				
 			}
-
-			// Import comments (TBD)
 
 		} catch (Exception e) {
 			System.err.println("Woops! There's been an error importing the "
@@ -573,6 +561,59 @@ public class WordpressImporterUtil {
 			e.printStackTrace();
 		}
 	}
+
+	
+
+	private static void addComment(BlogsEntry entry, String nickName, 
+			String emailAddress, String comment, ServiceContext serviceContext)
+		throws PortalException, SystemException {
+		
+		User user = null;
+		
+		try {
+			user = UserLocalServiceUtil.getUserByEmailAddress(
+				entry.getCompanyId(), emailAddress);
+		}
+		catch (NoSuchUserException nsue) {
+
+			// I'll create an incomplete account for this new user
+			
+			user = addAnonymousUser(entry.getCompanyId(), nickName, 
+				emailAddress, serviceContext);				
+		}
+
+		try {		
+			long classPK = entry.getEntryId();
+			String className = BlogsEntry.class.getName();
+			String body = comment;
+			String subject = null;
+			long parentMessageId = 0;
+			long threadId = 0;
+			
+			String name = PrincipalThreadLocal.getName();
+			
+			PrincipalThreadLocal.setName(user.getUserId());
+			
+			try {
+				
+				MBMessage addedComment = 
+					MBMessageLocalServiceUtil.addDiscussionMessage(
+						user.getUserId(), nickName, entry.getGroupId(), 
+						className, classPK, threadId,
+						parentMessageId, subject, body, serviceContext);
+				
+				_commentsCount++;
+			}
+			finally {
+				PrincipalThreadLocal.setName(name);
+			}
+		}
+		finally {
+			//PrincipalThreadLocal.setName(name);
+		}
+	}
+
+	
 
 	private static void addPageAndContent(ThemeDisplay themeDisplay,
 			ServiceContext serviceContext, Map<String, Layout> parentLayouts,
@@ -611,7 +652,6 @@ public class WordpressImporterUtil {
 			JournalArticle article = null;
 
 			try {
-
 				article = addSimpleJournalArticle(
 					themeDisplay.getScopeGroupId(), title, description,
 					content, serviceContext);
@@ -625,10 +665,11 @@ public class WordpressImporterUtil {
 			if ((layout != null) && (article != null)) {
 				LayoutTypePortlet layoutTypePortlet = 
 					(LayoutTypePortlet) layout.getLayoutType();
+				
 				String assetPublisherPortletId = 
 					layoutTypePortlet.addPortletId(
-							themeDisplay.getUserId(), 
-							PortletKeys.JOURNAL_CONTENT, "column-2", -1);
+						themeDisplay.getUserId(), 
+						PortletKeys.JOURNAL_CONTENT, "column-2", -1);
 
 				long companyId = themeDisplay.getCompanyId();
 				long ownerId = PortletKeys.PREFS_OWNER_ID_DEFAULT;
@@ -672,7 +713,7 @@ public class WordpressImporterUtil {
 
 		Date displayDate = new Date();
 		Calendar calendar = CalendarFactoryUtil.getCalendar(
-				TimeZoneUtil.getDefault(), LocaleUtil.getDefault());
+			TimeZoneUtil.getDefault(), LocaleUtil.getDefault());
 
 		calendar.setTime(displayDate);
 
@@ -706,12 +747,13 @@ public class WordpressImporterUtil {
 		titleMap.put(locale, title);
 		descriptionMap.put(locale, description);
 		
-		return JournalArticleServiceUtil.addArticle(groupId, classNameId, classPK, 
-				articleId, autoArticleId, titleMap, descriptionMap, sb.toString(), 
-				contentType, structureId, templateId, layoutUuid, displayDateMonth, 
-				displayDateDay, displayDateYear, displayDateHour, displayDateMinute, 
-				0, 0, 0, 0, 0, neverExpire, 0, 0, 0, 0, 0, neverReview, indexable,
-				smallImage, null, null, null, link, serviceContext);
+		return JournalArticleServiceUtil.addArticle(groupId, classNameId, 
+			classPK, articleId, autoArticleId, titleMap, descriptionMap, 
+			sb.toString(), contentType, structureId, templateId, layoutUuid, 
+			displayDateMonth, displayDateDay, displayDateYear, displayDateHour, 
+			displayDateMinute, 0, 0, 0, 0, 0, neverExpire, 0, 0, 0, 0, 0, 
+			neverReview, indexable, smallImage, null, null, null, link, 
+			serviceContext);
 	}
 	
 	private static String formatContent(String contentValue) {
@@ -726,6 +768,108 @@ public class WordpressImporterUtil {
 						
 		return result;
 	}
+	
+	private static String getItemTagValue(Element itemElement, String tagName) {
+		NodeList nodeList = itemElement.getElementsByTagName(tagName);
+		Element firstElement = (Element) nodeList.item(0);
+		
+		return firstElement.getTextContent().trim();		
+	}
+	
+	private static String getItemFirstChildTagValue(
+		Element itemElement, String tagName) {
+		
+		NodeList nodeList = itemElement.getElementsByTagName(tagName);
+		Element nodeElement = (Element) nodeList.item(0);
+		NodeList childNodeList = nodeElement.getChildNodes();
+		String result = StringPool.BLANK;
+
+		if (childNodeList.getLength() > 0) {
+			Node childNode = ((Node) childNodeList.item(0));
+
+			result = childNode.getNodeValue().trim();
+		}
+		
+		return result;
+	}
+	
+	private static void importBlogsEntryComments(
+		BlogsEntry entry, Element itemElement, ServiceContext serviceContext) {
+				
+		NodeList commentsList = itemElement.getElementsByTagName(
+			"wp:comment");			
+			
+		String nickName;
+		String emailAddress;
+		String comment;
+		
+		for (int s = 0; s < commentsList.getLength(); s++) {
+			Node item = commentsList.item(s);
+			Element commentElement = (Element) item;
+
+			// Author nickname
+			
+			nickName = getItemTagValue(commentElement, "wp:comment_author");
+			
+			// Author email address
+			
+			emailAddress = getItemTagValue(
+				commentElement, "wp:comment_author_email");
+			
+			if (Validator.isNull(emailAddress)) {				
+				continue;
+			}
+			
+			// Comment content
+			
+			comment = getItemTagValue(commentElement, "wp:comment_content");
+
+			// Add comment
+
+			try {
+				addComment(
+					entry, nickName, emailAddress, comment, serviceContext);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}		
+			
+			/*
+			 * This is a sample comment content
+			 * <wp:comment>
+					<wp:comment_id>30</wp:comment_id>
+					<wp:comment_author><![CDATA[fandez2010]]></wp:comment_author>
+					<wp:comment_author_email>test@gmail.com</wp:comment_author_email>
+					<wp:comment_author_url>http://fandez2010.wordpress.com</wp:comment_author_url>
+					<wp:comment_author_IP>88.18.227.195</wp:comment_author_IP>
+					<wp:comment_date>2010-08-05 09:00:45</wp:comment_date>
+					<wp:comment_date_gmt>2010-08-05 07:00:45</wp:comment_date_gmt>
+					<wp:comment_content><![CDATA[blah blah blah blah]]></wp:comment_content>
+					<wp:comment_approved>1</wp:comment_approved>
+					<wp:comment_type></wp:comment_type>
+					<wp:comment_parent>0</wp:comment_parent>
+					<wp:comment_user_id>14426701</wp:comment_user_id>
+					<wp:commentmeta>
+						<wp:meta_key>jabber_published</wp:meta_key>
+						<wp:meta_value><![CDATA[1280991646]]></wp:meta_value>
+					</wp:commentmeta>
+				</wp:comment>
+			*/
+		}
+	}
+	
+	private static void updatePreferences(PortletPreferences preferences) {
+		_importBlogEntries = GetterUtil.getBoolean(preferences.getValue(
+			"importBlogEntries", StringPool.TRUE));
+
+		_importCategories = GetterUtil.getBoolean(preferences.getValue(
+			"importTags", StringPool.TRUE));
+		
+		_importPages = GetterUtil.getBoolean(preferences.getValue(
+			"importPages", StringPool.TRUE));
+		
+		_importTags = GetterUtil.getBoolean(preferences.getValue(
+			"importTags", StringPool.TRUE)); 
+	}
 
 	private static String DEFAULT_VOCABULARY_NAME = "Wordpress Vocabulary";
 	private static final String DEFAULT_XML_PREFIX = 
@@ -734,13 +878,20 @@ public class WordpressImporterUtil {
 			+ "language-id=\"en_US\"><![CDATA[<p>";
 	private static final String DEFAULT_XML_SUFIX = "</p>]]></static-content>"
 			+ "</root>";
+	private static final int STATUS_INCOMPLETE = 6;
 	private static final String TYPE_PAGE = "page";
-	private static final String TYPE_POST = "post";
+	private static final String TYPE_POST = "post";	
 	private static AssetVocabulary WORDPRESS_VOCABULARY = null;
-	
+
+	private static boolean _importBlogEntries = false; 
+	private static boolean _importCategories = false;
+	private static boolean _importPages = false;
+	private static boolean _importTags = false;
 
 	private static int _categoriesCount;
+	private static int _commentsCount;
 	private static int _entriesCount;
 	private static int _pagesCount;
 	private static int _tagsCount;
+	
 }
