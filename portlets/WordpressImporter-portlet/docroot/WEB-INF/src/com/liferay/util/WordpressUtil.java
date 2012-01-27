@@ -45,7 +45,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.liferay.portal.NoSuchUserException;
-import com.liferay.portal.NoSuchWorkflowDefinitionLinkException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -58,18 +57,17 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutConstants;
 import com.liferay.portal.model.LayoutTypePortlet;
 import com.liferay.portal.model.User;
-import com.liferay.portal.model.WorkflowDefinitionLink;
 import com.liferay.portal.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.service.LayoutServiceUtil;
 import com.liferay.portal.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.service.UserServiceUtil;
-import com.liferay.portal.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.asset.DuplicateCategoryException;
@@ -85,8 +83,9 @@ import com.liferay.portlet.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.service.JournalArticleServiceUtil;
 import com.liferay.portlet.messageboards.model.MBMessage;
+import com.liferay.portlet.messageboards.model.MBMessageDisplay;
+import com.liferay.portlet.messageboards.model.MBThread;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
-import com.liferay.portlet.messageboards.service.MBMessageServiceUtil;
 
 /**
  * @author Juan Fernández
@@ -645,12 +644,22 @@ public class WordpressUtil {
 		}
 
 		try {		
-			long classPK = entry.getEntryId();
 			String className = BlogsEntry.class.getName();
+			long classPK = entry.getEntryId();
 			String body = comment;
-			String subject = comment;
-			long parentMessageId = 0;
-			long threadId = 0;
+			String subject = comment;			
+
+			MBMessageDisplay messageDisplay = 
+				MBMessageLocalServiceUtil.getDiscussionMessageDisplay(
+					entry.getUserId(), entry.getGroupId(), className, classPK, 
+					WorkflowConstants.STATUS_ANY, StringPool.BLANK);
+			
+			MBThread thread = messageDisplay.getThread();
+			MBMessage rootMessage = MBMessageLocalServiceUtil.getMessage(
+				thread.getRootMessageId());			
+			
+			long parentMessageId = rootMessage.getMessageId();
+			long threadId = thread.getThreadId();
 			
 			String name = PrincipalThreadLocal.getName();
 			
@@ -661,8 +670,8 @@ public class WordpressUtil {
 				MBMessage addedComment = 
 					MBMessageLocalServiceUtil.addDiscussionMessage(
 						user.getUserId(), nickName, entry.getGroupId(), 
-						className, classPK, threadId,
-						parentMessageId, subject, body, serviceContext);
+						className, classPK, threadId, parentMessageId, subject, 
+						body, serviceContext);
 				
 				_commentsCount++;
 			}
