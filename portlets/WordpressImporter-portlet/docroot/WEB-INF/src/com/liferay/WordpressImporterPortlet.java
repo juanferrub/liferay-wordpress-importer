@@ -28,7 +28,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.util.WordpressImporterUtil;
+import com.liferay.util.WordpressUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
 /**
@@ -36,7 +36,7 @@ import com.liferay.util.bridges.mvc.MVCPortlet;
  */
 public class WordpressImporterPortlet extends MVCPortlet {
  
-	public void addFile(
+	public void importWordpressSite(
 			ActionRequest actionRequest, ActionResponse actionResponse) 
 		throws Exception {
 		
@@ -58,14 +58,14 @@ public class WordpressImporterPortlet extends MVCPortlet {
 			// Process Wordpress File
 			
 			Map<String, Integer> results = 
-				WordpressImporterUtil.processFile(file, actionRequest);
+				WordpressUtil.processFile(file, actionRequest);
 			
 			// Print the result message
 			
 			printResultMessage(results);			 
 			
 			String redirect = ParamUtil.get(
-					uploadRequest, "redirect", StringPool.BLANK);
+				uploadRequest, "redirect", StringPool.BLANK);
 			
 			if (Validator.isNotNull(redirect)) {
 				actionResponse.sendRedirect(redirect);

@@ -21,7 +21,7 @@
 
 <label><liferay-ui:message key="upload-your-wordpress-file" />:</label>
 
-<form action="<portlet:actionURL name="addFile" />" class="uni-form" enctype="multipart/form-data" method="post" name="<portlet:namespace />fm">	
+<form action="<portlet:actionURL name="importWordpressSite" />" class="uni-form" enctype="multipart/form-data" method="post" name="<portlet:namespace />fm">	
 	<input type="hidden" name="<portlet:namespace />redirect" value="<portlet:renderURL />" />
 	
 	<input id="<portlet:namespace />file" name="<portlet:namespace />file" type="file" />
