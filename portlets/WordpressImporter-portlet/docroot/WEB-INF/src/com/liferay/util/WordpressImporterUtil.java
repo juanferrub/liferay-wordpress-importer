@@ -586,7 +586,7 @@ public class WordpressImporterUtil {
 			long classPK = entry.getEntryId();
 			String className = BlogsEntry.class.getName();
 			String body = comment;
-			String subject = null;
+			String subject = comment;
 			long parentMessageId = 0;
 			long threadId = 0;
 			

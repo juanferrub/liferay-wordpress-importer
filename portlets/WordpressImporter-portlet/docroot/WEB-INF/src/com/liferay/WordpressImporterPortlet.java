@@ -75,6 +75,7 @@ public class WordpressImporterPortlet extends MVCPortlet {
 	private void printResultMessage(Map<String, Integer> results) {
 		
 		int categoriesCount = results.get("categoriesCount");
+		int commentsCount = results.get("commentsCount");
 		int entriesCount = results.get("entriesCount");
 		int pagesCount = results.get("pagesCount");
 		int tagsCount = results.get("tagsCount");			
@@ -113,6 +114,15 @@ public class WordpressImporterPortlet extends MVCPortlet {
 			
 			sb.append(tagsCount);
 			sb.append(" tags");
+		}
+		
+		if (commentsCount > 0) {
+			if (sb.length() > baseLength) {
+				sb.append(", ");
+			}
+			
+			sb.append(commentsCount);
+			sb.append(" comments");
 		}
 		
 		System.out.println(sb.toString());
