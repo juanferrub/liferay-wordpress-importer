@@ -17,7 +17,6 @@ public class TagFilter implements ItemFilter {
         this._tags = tags;
     }
 
-    @Override
     public boolean ignoreElement(Element itemElement) {
         if (itemElement == null || _tags.isEmpty()) {
             return false;

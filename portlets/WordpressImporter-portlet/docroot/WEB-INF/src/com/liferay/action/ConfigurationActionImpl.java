@@ -76,7 +76,6 @@ public class ConfigurationActionImpl implements ConfigurationAction {
 		
 	}
 
-	@Override
 	public String render(PortletConfig arg0, RenderRequest renderRequest,
 			RenderResponse renderResponse) throws Exception {
 		

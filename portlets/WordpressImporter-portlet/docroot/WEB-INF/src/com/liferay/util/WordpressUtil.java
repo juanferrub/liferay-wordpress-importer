@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -570,6 +571,7 @@ public class WordpressUtil {
 		String nickName;
 		String emailAddress;
 		String comment;
+		String commentDate;
 		
 		for (int s = 0; s < commentsList.getLength(); s++) {
 			Node item = commentsList.item(s);
@@ -591,12 +593,32 @@ public class WordpressUtil {
 			// Comment content
 			
 			comment = getItemTagValue(commentElement, "wp:comment_content");
+			
+			// Comment date
+			
+			commentDate = 
+				getItemTagValue(commentElement, "wp:comment_date");
+
+			Date date = new Date();
+
+			if (Validator.isNotNull(commentDate)) {				
+				try {
+					SimpleDateFormat format = new SimpleDateFormat(
+						"yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+					
+					date = format.parse(commentDate);
+					
+				} catch (ParseException e) {				
+					System.out.println("Error parsing a date " + commentDate);
+				}
+			}
 
 			// Add comment
 
 			try {
 				addComment(
-					entry, nickName, emailAddress, comment, serviceContext);
+					entry, nickName, emailAddress, comment, date, 
+					serviceContext);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}		
@@ -626,7 +648,8 @@ public class WordpressUtil {
 	}
 
 	private static void addComment(BlogsEntry entry, String nickName, 
-			String emailAddress, String comment, ServiceContext serviceContext)
+			String emailAddress, String comment, Date date, 
+			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 		
 		User user = null;
@@ -671,7 +694,9 @@ public class WordpressUtil {
 					MBMessageLocalServiceUtil.addDiscussionMessage(
 						user.getUserId(), nickName, entry.getGroupId(), 
 						className, classPK, threadId, parentMessageId, subject, 
-						body, serviceContext);
+						body, serviceContext);			
+								
+				// addedComment.setCreateDate(date);
 				
 				_commentsCount++;
 			}
