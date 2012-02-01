@@ -470,32 +470,32 @@ public class WordpressUtil {
 				int displayDateHour = calendar.get(Calendar.HOUR_OF_DAY);
 				int displayDateMinute = calendar.get(Calendar.MINUTE);
 
-				NodeList creatorList = itemElement.getElementsByTagName(
-					"dc:creator");
+				long userId = themeDisplay.getUserId();
+				
+				String creatorName = getItemFirstChildTagValue(
+					itemElement, "dc:creator");
 
-                long userId = themeDisplay.getUserId();
+				// In case you want to respect the original entry author, you 
+				// need it to be mapped in the "User Mappings" section.
+				
+            	String mappedScreenName = _userMappings.get(creatorName);
 
-                if (creatorList.getLength() > 0) {
-                    String creatorName = creatorList.item(0).getTextContent();
-                    String mappedScreenName = _userMappings.get(creatorName);
+                if (Validator.isNotNull(mappedScreenName)) {
+                	try {      
+                    	User user = 
+                    		UserLocalServiceUtil.getUserByScreenName(
+                				themeDisplay.getCompanyId(), 
+                				mappedScreenName);
 
-                    if (Validator.isNotNull(mappedScreenName)) {
-                    	try {      
-	                    	User user = 
-	                    		UserLocalServiceUtil.getUserByScreenName(
-                    				themeDisplay.getCompanyId(), 
-                    				mappedScreenName);
-	
-	                        userId = user.getUserId();
-	                    } catch (NoSuchUserException e) {
-	                        System.err.println("User \"" + creatorName +
-	                            "\" was mapped to liferay user \"" + 
-	                            mappedScreenName + 
-	                            "\" but this user does not exist");
-	                    }
+                        userId = user.getUserId();
+                    } catch (NoSuchUserException e) {
+                        System.err.println("User \"" + creatorName +
+                            "\" was mapped to liferay user \"" + 
+                            mappedScreenName + 
+                            "\" but this user does not exist");
                     }
                 }
-
+                
                 // Entry extra attributes
                 
                 String description = StringPool.BLANK;
