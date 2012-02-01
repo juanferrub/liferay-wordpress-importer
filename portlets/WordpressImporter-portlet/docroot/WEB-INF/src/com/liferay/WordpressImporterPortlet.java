@@ -40,8 +40,8 @@ public class WordpressImporterPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse) 
 		throws Exception {
 		
-		System.out.println("Starting the Wordpress importer");
-						
+		System.out.println("Starting the Wordpress importer");	
+								
 		UploadPortletRequest uploadRequest = PortalUtil.getUploadPortletRequest(
 				actionRequest);
 

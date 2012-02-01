@@ -18,6 +18,7 @@ package com.liferay.util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -94,6 +95,8 @@ import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
  */
 
 public class WordpressUtil {
+
+	
 
 	public static Map<String, Integer> processFile(File file,
 			ActionRequest request) {
@@ -177,59 +180,27 @@ public class WordpressUtil {
 					String linkValue = getItemFirstChildTagValue(
 						itemElement, "link");
 
-					// Configuration preferences
+					// Read user preferences
 					
 					PortletPreferences preferences = request.getPreferences();
 					
-					updatePreferences(preferences);					
+					readPreferences(preferences);					
+					
+					// Tags filter
 					
 					BaseFilter filter = new BaseFilter();
 
-                    String[] assetTagNames = 
-                    	StringUtil.split(GetterUtil.getString(
-                			preferences.getValue("blogTags", 
-            					StringPool.BLANK)));
+                    String[] assetTagNames = StringUtil.split(
+                		GetterUtil.getString(preferences.getValue("blogTags", 
+        					StringPool.BLANK)));
 
-                    filter.addFilter(
-                    		new TagFilter(Arrays.asList(assetTagNames)));
+                    filter.addFilter(new TagFilter(
+                		Arrays.asList(assetTagNames)));
                     
                     if (filter.ignoreElement(itemElement)) {
                         continue;
-                    }
-                    		
-                    Map<String, String> userMapping = 
-                    	new HashMap<String, String>();
-
-                    String userMappings = 
-                    	GetterUtil.getString(preferences.getValue(
-                			"userMappings", StringPool.BLANK));
-
-                    BufferedReader reader = new BufferedReader(
-                        new StringReader(userMappings));
-
-                    String line = StringPool.BLANK;
-                    
-                    while((line = reader.readLine()) != null) {
-                        String[] pair = line.split("=");
-                        
-                        if (pair.length == 2) {
-                            userMapping.put(pair[0], pair[1]);
-                        }
-                        else {
-                            System.err.println("Line \"" + line + "\" " +
-                            	"is not a valid user mapping");
-                        }
-                    }
-                    
-					String wordpressVocabularyName = 
-						GetterUtil.getString(preferences.getValue(
-							"wordpressVocabularyName", 
-							DEFAULT_VOCABULARY_NAME));
-
-                    if (Validator.isNotNull(wordpressVocabularyName)) {
-						DEFAULT_VOCABULARY_NAME = wordpressVocabularyName;
-					}
-                  
+                    }         
+                    					                  
 					if (WordpressUtil.TYPE_PAGE.equals(postTypeValue)
 							&& _importPages) {
 
@@ -241,17 +212,14 @@ public class WordpressUtil {
 
 						_pagesCount++;
 
-					} else if (WordpressUtil.TYPE_POST.equals(
-							postTypeValue)) {
+					} else if (WordpressUtil.TYPE_POST.equals(postTypeValue)) {
 
 						// Manage blog entry & its comments
 						
 						if (Validator.isNotNull(contentValue)) {
 							addBlogEntry(themeDisplay, serviceContext,
 								importedTagNames, importedCategoryNames,
-								itemElement, titleValue, contentValue,
-								_importBlogEntries, _importTags,
-								_importCategories, userMapping);
+								itemElement, titleValue, contentValue);
 						}
 					}
 				}
@@ -327,15 +295,11 @@ public class WordpressUtil {
 	private static void addBlogEntry(ThemeDisplay themeDisplay,
 			ServiceContext serviceContext, List<String> importedTagNames,
 			List<String> importedCategoryNames, Element itemElement,
-			String title, String content, boolean importBlogEntries,
-			boolean importTags, boolean importCategories,
-            Map<String, String> userMapping) {
+			String title, String content) {
 
 		try {
-
-			// Create vocabulary, tags and categories & add them to the
-			// serviceContext
-
+			// Add vocabulary
+			
 			if (WORDPRESS_VOCABULARY == null) {
 				try {
 					Map<Locale, String> vocabularyTitleMap = 
@@ -343,8 +307,8 @@ public class WordpressUtil {
 					Map<Locale, String> vocabularydescriptionMap = 
 						new HashMap<Locale, String>();
 
-					vocabularyTitleMap.put(LocaleUtil.getDefault(),
-							DEFAULT_VOCABULARY_NAME);
+					vocabularyTitleMap.put(LocaleUtil.getDefault(), 
+						_vocabularyName);
 
 					WORDPRESS_VOCABULARY = 
 						AssetVocabularyServiceUtil.addVocabulary(
@@ -360,13 +324,15 @@ public class WordpressUtil {
 						String vocabularyTitle = 
 							vocabulary.getTitle(LocaleUtil.getDefault());
 						
-						if (vocabularyTitle.equals(DEFAULT_VOCABULARY_NAME)) {
+						if (vocabularyTitle.equals(_vocabularyName)) {
 							WORDPRESS_VOCABULARY = vocabulary;
 						}
 					}
 				}
 			}
 
+			// Add tags & categories
+			
 			NodeList categoryList = 
 				itemElement.getElementsByTagName("category");
 
@@ -386,7 +352,7 @@ public class WordpressUtil {
 
 				try {
 					if (("tag".equals(domain) || "post_tag".equals(domain)) && 
-						importTags) {
+						_importTags) {
 
 						assetTagNames.add(elementValue);
 
@@ -398,7 +364,7 @@ public class WordpressUtil {
 
 						_tagsCount++;
 					} 
-					else if ("category".equals(domain) && importCategories) {
+					else if ("category".equals(domain) && _importCategories) {
 
 						if (!importedCategoryNames.contains(elementValue)) {
 							Map<Locale, String> titleMap = 
@@ -470,9 +436,9 @@ public class WordpressUtil {
 						+ "entry called \"" + title + "\"");
 			}
 
-			// Create blog entry
+			// Add blog entry
 
-			if (importBlogEntries) {
+			if (_importBlogEntries) {
 				System.out.println("Creating blog entry \"" + title + "\"");
 
 				boolean allowPingbacks = true;
@@ -511,7 +477,7 @@ public class WordpressUtil {
 
                 if (creatorList.getLength() > 0) {
                     String creatorName = creatorList.item(0).getTextContent();
-                    String mappedScreenName = userMapping.get(creatorName);
+                    String mappedScreenName = _userMappings.get(creatorName);
 
                     if (Validator.isNotNull(mappedScreenName)) {
                     	try {      
@@ -549,7 +515,7 @@ public class WordpressUtil {
 
 				_entriesCount++;
 				
-				// Import comments (TBD)
+				// Add comments
 				
 				addBlogEntryComments(entry, itemElement, serviceContext);			
 				
@@ -562,7 +528,7 @@ public class WordpressUtil {
 		}
 	}
 	
-	private static void addBlogEntryComments(
+	private static void addBlogEntryComments (
 		BlogsEntry entry, Element itemElement, ServiceContext serviceContext) {
 				
 		NodeList commentsList = itemElement.getElementsByTagName(
@@ -666,50 +632,42 @@ public class WordpressUtil {
 				emailAddress, serviceContext);				
 		}
 
-		try {		
-			String className = BlogsEntry.class.getName();
-			long classPK = entry.getEntryId();
-			String body = comment;
-			String subject = comment;			
+		String className = BlogsEntry.class.getName();
+		long classPK = entry.getEntryId();
+		String body = comment;
+		String subject = comment;			
 
-			MBMessageDisplay messageDisplay = 
-				MBMessageLocalServiceUtil.getDiscussionMessageDisplay(
-					entry.getUserId(), entry.getGroupId(), className, classPK, 
-					WorkflowConstants.STATUS_ANY, StringPool.BLANK);
+		MBMessageDisplay messageDisplay = 
+			MBMessageLocalServiceUtil.getDiscussionMessageDisplay(
+				entry.getUserId(), entry.getGroupId(), className, classPK, 
+				WorkflowConstants.STATUS_ANY, StringPool.BLANK);
+		
+		MBThread thread = messageDisplay.getThread();
+		MBMessage rootMessage = MBMessageLocalServiceUtil.getMessage(
+			thread.getRootMessageId());			
+		
+		long parentMessageId = rootMessage.getMessageId();
+		long threadId = thread.getThreadId();
+		
+		String name = PrincipalThreadLocal.getName();
+		
+		PrincipalThreadLocal.setName(user.getUserId());
+		
+		try {
+			MBMessage addedComment = 
+				MBMessageLocalServiceUtil.addDiscussionMessage(
+					user.getUserId(), nickName, entry.getGroupId(), 
+					className, classPK, threadId, parentMessageId, subject, 
+					body, serviceContext);			
+							
+			// addedComment.setCreateDate(date);
 			
-			MBThread thread = messageDisplay.getThread();
-			MBMessage rootMessage = MBMessageLocalServiceUtil.getMessage(
-				thread.getRootMessageId());			
-			
-			long parentMessageId = rootMessage.getMessageId();
-			long threadId = thread.getThreadId();
-			
-			String name = PrincipalThreadLocal.getName();
-			
-			PrincipalThreadLocal.setName(user.getUserId());
-			
-			try {
-				
-				MBMessage addedComment = 
-					MBMessageLocalServiceUtil.addDiscussionMessage(
-						user.getUserId(), nickName, entry.getGroupId(), 
-						className, classPK, threadId, parentMessageId, subject, 
-						body, serviceContext);			
-								
-				// addedComment.setCreateDate(date);
-				
-				_commentsCount++;
-			}
-			finally {
-				PrincipalThreadLocal.setName(name);
-			}
+			_commentsCount++;
 		}
 		finally {
-			//PrincipalThreadLocal.setName(name);
+			PrincipalThreadLocal.setName(name);
 		}
 	}
-
-	
 
 	private static void addPageAndContent(ThemeDisplay themeDisplay,
 			ServiceContext serviceContext, Map<String, Layout> parentLayouts,
@@ -889,7 +847,7 @@ public class WordpressUtil {
 		return result;
 	}
 	
-	private static void updatePreferences(PortletPreferences preferences) {
+	private static void readPreferences(PortletPreferences preferences) {
 		_importBlogEntries = GetterUtil.getBoolean(preferences.getValue(
 			"importBlogEntries", StringPool.TRUE));
 
@@ -900,10 +858,39 @@ public class WordpressUtil {
 			"importPages", StringPool.TRUE));
 		
 		_importTags = GetterUtil.getBoolean(preferences.getValue(
-			"importTags", StringPool.TRUE)); 
+			"importTags", StringPool.TRUE));
+		
+		_userMappings = new HashMap<String, String>();
+		
+		_vocabularyName = GetterUtil.getString(preferences.getValue(
+				"wordpressVocabularyName", _vocabularyName));
+
+        String userMappings = GetterUtil.getString(preferences.getValue(
+			"userMappings", StringPool.BLANK));
+
+        BufferedReader reader = new BufferedReader(new StringReader(
+    		userMappings));
+
+        String line = StringPool.BLANK;
+        
+        try {
+			while((line = reader.readLine()) != null) {
+			    String[] pair = line.split("=");
+			    
+			    if (pair.length == 2) {
+			    	_userMappings.put(pair[0], pair[1]);
+			    }
+			    else {
+			        System.err.println("Line \"" + line + "\" " +
+			        	"is not a valid user mapping");
+			    }
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
-	private static String DEFAULT_VOCABULARY_NAME = "Wordpress Vocabulary";
 	private static final String DEFAULT_XML_PREFIX = 
 		"<?xml version='1.0' encoding='UTF-8'?><root available-locales=\""
 			+ "en_US\" default-locale=\"en_US\"><static-content "
@@ -920,10 +907,14 @@ public class WordpressUtil {
 	private static boolean _importPages = false;
 	private static boolean _importTags = false;
 
+	private static HashMap<String, String> _userMappings;
+	
 	private static int _categoriesCount;
 	private static int _commentsCount;
 	private static int _entriesCount;
 	private static int _pagesCount;
 	private static int _tagsCount;
 	
+	private static String _vocabularyName = "Wordpress Vocabulary";
+
 }
