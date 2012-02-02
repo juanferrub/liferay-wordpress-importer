@@ -121,6 +121,14 @@ public class WordpressUtil {
 		List<String> importedTagNames = new ArrayList<String>();
 		List<String> importedCategoryNames = new ArrayList<String>();
 		Map<String, Layout> parentLayouts = new HashMap<String, Layout>();
+		
+		// Add/update vocabulary
+		
+		try {
+			addVocabulary(themeDisplay, serviceContext);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		} 
 
 		try {
 			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
@@ -298,39 +306,6 @@ public class WordpressUtil {
 			String title, String content) {
 
 		try {
-			// Add vocabulary
-			
-			if (WORDPRESS_VOCABULARY == null) {
-				try {
-					Map<Locale, String> vocabularyTitleMap = 
-						new HashMap<Locale, String>();
-					Map<Locale, String> vocabularydescriptionMap = 
-						new HashMap<Locale, String>();
-
-					vocabularyTitleMap.put(LocaleUtil.getDefault(), 
-						_vocabularyName);
-
-					WORDPRESS_VOCABULARY = 
-						AssetVocabularyServiceUtil.addVocabulary(
-							vocabularyTitleMap, vocabularydescriptionMap, null,
-							serviceContext);
-					
-				} catch (DuplicateVocabularyException dve) {
-					List<AssetVocabulary> vocabularies = 
-						AssetVocabularyServiceUtil.getGroupVocabularies(
-							themeDisplay.getScopeGroupId());
-
-					for (AssetVocabulary vocabulary : vocabularies) {
-						String vocabularyTitle = 
-							vocabulary.getTitle(LocaleUtil.getDefault());
-						
-						if (vocabularyTitle.equals(_vocabularyName)) {
-							WORDPRESS_VOCABULARY = vocabulary;
-						}
-					}
-				}
-			}
-
 			// Add tags & categories
 			
 			NodeList categoryList = 
@@ -527,7 +502,7 @@ public class WordpressUtil {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void addBlogEntryComments (
 		BlogsEntry entry, Element itemElement, ServiceContext serviceContext) {
 				
@@ -810,6 +785,42 @@ public class WordpressUtil {
 			serviceContext);
 	}
 	
+	private static void addVocabulary(ThemeDisplay themeDisplay,
+			ServiceContext serviceContext) throws PortalException,
+			SystemException {
+		
+		if (WORDPRESS_VOCABULARY == null) {
+			try {
+				Map<Locale, String> vocabularyTitleMap = 
+					new HashMap<Locale, String>();
+				Map<Locale, String> vocabularydescriptionMap = 
+					new HashMap<Locale, String>();
+	
+				vocabularyTitleMap.put(LocaleUtil.getDefault(), 
+					_vocabularyName);
+	
+				WORDPRESS_VOCABULARY = 
+					AssetVocabularyServiceUtil.addVocabulary(
+						vocabularyTitleMap, vocabularydescriptionMap, null,
+						serviceContext);
+				
+			} catch (DuplicateVocabularyException dve) {
+				List<AssetVocabulary> vocabularies = 
+					AssetVocabularyServiceUtil.getGroupVocabularies(
+						themeDisplay.getScopeGroupId());
+	
+				for (AssetVocabulary vocabulary : vocabularies) {
+					String vocabularyTitle = 
+						vocabulary.getTitle(LocaleUtil.getDefault());
+					
+					if (vocabularyTitle.equals(_vocabularyName)) {
+						WORDPRESS_VOCABULARY = vocabulary;
+					}
+				}
+			}
+		}
+	}
+
 	private static String formatContent(String contentValue) {
 		
 		String result = "<p>" + contentValue + "</p>";
