@@ -26,7 +26,9 @@
 	
 	<input id="<portlet:namespace />file" name="<portlet:namespace />file" type="file" />
 	
+	</br>
+	
 	<div class="button-holder">
-		<input type="submit" value="submit" />
+		<input type="submit" value="Upload" />
 	</div>
 </form>

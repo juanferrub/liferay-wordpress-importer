@@ -695,7 +695,7 @@ public class WordpressUtil {
 				LayoutTypePortlet layoutTypePortlet = 
 					(LayoutTypePortlet) layout.getLayoutType();
 				
-				String assetPublisherPortletId = 
+				String wcDisplayPortletId = 
 					layoutTypePortlet.addPortletId(
 						themeDisplay.getUserId(), 
 						PortletKeys.JOURNAL_CONTENT, "column-2", -1);
@@ -707,14 +707,18 @@ public class WordpressUtil {
 				PortletPreferences prefs = 
 					PortletPreferencesLocalServiceUtil.getPreferences(
 						companyId, ownerId, ownerType, layout.getPlid(), 
-						assetPublisherPortletId);
+						wcDisplayPortletId);
 
-				prefs.setValue("article-id", article.getArticleId());
-				prefs.setValue("group-id",
-					String.valueOf(themeDisplay.getScopeGroupId()));
+				prefs.setValue("article-id", String.valueOf(article.getId()));
+				prefs.setValue("group-id", String.valueOf(
+					themeDisplay.getScopeGroupId()));
 
+				prefs.setValue("articleId", article.getArticleId());
+				prefs.setValue("groupId", String.valueOf(
+					themeDisplay.getScopeGroupId()));
+				
 				PortletPreferencesLocalServiceUtil.updatePreferences(ownerId,
-					ownerType, layout.getPlid(), assetPublisherPortletId,
+					ownerType, layout.getPlid(), wcDisplayPortletId,
 					prefs);
 
 				LayoutServiceUtil.updateLayout(layout.getGroupId(),
