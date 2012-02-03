@@ -19,14 +19,15 @@
 
 <%@ include file="/init.jsp" %>
 
-<label><liferay-ui:message key="upload-your-wordpress-file" />:</label>
+
+<label><liferay-ui:icon image="search" /><liferay-ui:message key="upload-your-wordpress-file" />:</label>
 
 <form action="<portlet:actionURL name="importWordpressSite" />" class="uni-form" enctype="multipart/form-data" method="post" name="<portlet:namespace />fm">	
 	<input type="hidden" name="<portlet:namespace />redirect" value="<portlet:renderURL />" />
 	
 	<input id="<portlet:namespace />file" name="<portlet:namespace />file" type="file" />
 	
-	</br>
+	<br></br>
 	
 	<div class="button-holder">
 		<input type="submit" value="Upload" />
