@@ -771,11 +771,12 @@ public class WordpressUtil {
 		long classPK = 0;
 		String layoutUuid = null;
 		
-		Locale locale = LanguageUtil.getLocale(serviceContext.getLanguageId());
+		Locale defaultLocale = LocaleUtil.fromLanguageId(
+			LocalizationUtil.getDefaultLocale(content));
 		
-		titleMap.put(locale, title);
-		descriptionMap.put(locale, description);
-		
+		titleMap.put(defaultLocale, title);
+		descriptionMap.put(defaultLocale, description);
+
 		return JournalArticleServiceUtil.addArticle(groupId, classNameId, 
 			classPK, articleId, autoArticleId, titleMap, descriptionMap, 
 			sb.toString(), contentType, structureId, templateId, layoutUuid, 
