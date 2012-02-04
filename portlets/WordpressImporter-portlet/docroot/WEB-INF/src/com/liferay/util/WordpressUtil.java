@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.mail.internet.NewsAddress;
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletPreferences;
 import javax.xml.parsers.DocumentBuilder;
@@ -563,28 +564,6 @@ public class WordpressUtil {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}		
-			
-			/*
-			 * This is a sample comment content
-			 * <wp:comment>
-					<wp:comment_id>30</wp:comment_id>
-					<wp:comment_author><![CDATA[fandez2010]]></wp:comment_author>
-					<wp:comment_author_email>test@gmail.com</wp:comment_author_email>
-					<wp:comment_author_url>http://fandez2010.wordpress.com</wp:comment_author_url>
-					<wp:comment_author_IP>88.18.227.195</wp:comment_author_IP>
-					<wp:comment_date>2010-08-05 09:00:45</wp:comment_date>
-					<wp:comment_date_gmt>2010-08-05 07:00:45</wp:comment_date_gmt>
-					<wp:comment_content><![CDATA[blah blah blah blah]]></wp:comment_content>
-					<wp:comment_approved>1</wp:comment_approved>
-					<wp:comment_type></wp:comment_type>
-					<wp:comment_parent>0</wp:comment_parent>
-					<wp:comment_user_id>14426701</wp:comment_user_id>
-					<wp:commentmeta>
-						<wp:meta_key>jabber_published</wp:meta_key>
-						<wp:meta_value><![CDATA[1280991646]]></wp:meta_value>
-					</wp:commentmeta>
-				</wp:comment>
-			*/
 		}
 	}
 
@@ -832,10 +811,37 @@ public class WordpressUtil {
 		
 		result = result.replace("\n", "</p><p>");
 		
-		// TODO: format the images correctly
-		
-		// result = result.replace("<img ", "<img style=\"float:left;\"");
+		result = formatImages(result);
 						
+		return result;
+	}
+
+	private static String formatImages(String result) {
+		String styleFloatLeft = "style=\"float:left;\"";
+		String styleFloatRight = "style=\"float:right;\"";
+		
+		int x = result.indexOf("<img", 0);
+		int y = result.indexOf("/>", x + 1) + 2;
+		
+		while (x > 0 && y > 0) {
+
+			String oldImgSubstring = result.substring(x, y);
+			String newImgSubstring = oldImgSubstring; 
+			
+			if (oldImgSubstring.contains("alignleft")) {
+				newImgSubstring = oldImgSubstring.replace(
+					"/>", styleFloatLeft + "/>");
+			} 
+			else if (oldImgSubstring.contains("alignright")) {
+				newImgSubstring = oldImgSubstring.replace(
+					"/>", styleFloatRight + "/>");
+			}
+			
+			result = result.replace(oldImgSubstring, newImgSubstring);
+
+			x = result.indexOf("<img class=\"", y + 1);
+			y = result.indexOf("\"", x + 1);
+		}
 		return result;
 	}
 	
