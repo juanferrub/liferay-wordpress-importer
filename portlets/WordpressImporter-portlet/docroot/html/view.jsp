@@ -15,21 +15,26 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
-
 <%@ include file="/init.jsp" %>
 
-
-<label><liferay-ui:icon image="search" /><liferay-ui:message key="upload-your-wordpress-file" />:</label>
-
-<form action="<portlet:actionURL name="importWordpressSite" />" class="uni-form" enctype="multipart/form-data" method="post" name="<portlet:namespace />fm">	
-	<input type="hidden" name="<portlet:namespace />redirect" value="<portlet:renderURL />" />
-	
-	<input id="<portlet:namespace />file" name="<portlet:namespace />file" type="file" />
-	
-	<br></br>
-	
-	<div class="button-holder">
-		<input type="submit" value="Upload" />
-	</div>
-</form>
+<c:choose>
+	<c:when test="<%= themeDisplay.isSignedIn() %>">
+		<label><liferay-ui:icon image="search" /><liferay-ui:message key="upload-your-wordpress-file" />:</label>
+		
+		<form action="<portlet:actionURL name="importWordpressSite" />" class="uni-form" enctype="multipart/form-data" method="post" name="<portlet:namespace />fm">	
+			<input type="hidden" name="<portlet:namespace />redirect" value="<portlet:renderURL />" />
+			
+			<input id="<portlet:namespace />file" name="<portlet:namespace />file" type="file" />
+			
+			<br></br>
+			
+			<div class="button-holder">
+				<input type="submit" value="Upload" />
+			</div>
+		</form>
+	</c:when>
+	<c:otherwise>
+		<liferay-ui:message key="you-need-to-be-logged-in-to-use-the-wordpress-importer-portlet" /> (<a href="<%= themeDisplay.getURLSignIn() %>" target="_top"><liferay-ui:message key="sign-in" /></a>)
+	</c:otherwise>
+</c:choose>
+		
