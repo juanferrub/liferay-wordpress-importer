@@ -825,23 +825,29 @@ public class WordpressUtil {
 		
 		while (x > 0 && y > 0) {
 
-			String oldImgSubstring = result.substring(x, y);
-			String newImgSubstring = oldImgSubstring; 
-			
-			if (oldImgSubstring.contains("alignleft")) {
-				newImgSubstring = oldImgSubstring.replace(
-					"/>", styleFloatLeft + "/>");
-			} 
-			else if (oldImgSubstring.contains("alignright")) {
-				newImgSubstring = oldImgSubstring.replace(
-					"/>", styleFloatRight + "/>");
+			try {
+				String oldImgSubstring = result.substring(x, y);
+				String newImgSubstring = oldImgSubstring; 
+				
+				if (oldImgSubstring.contains("alignleft")) {
+					newImgSubstring = oldImgSubstring.replace(
+						"/>", styleFloatLeft + "/>");
+				} 
+				else if (oldImgSubstring.contains("alignright")) {
+					newImgSubstring = oldImgSubstring.replace(
+						"/>", styleFloatRight + "/>");
+				}
+				
+				result = result.replace(oldImgSubstring, newImgSubstring);
+	
+				x = result.indexOf("<img class=\"", y + 1);
+				y = result.indexOf("\"", x + 1);
 			}
-			
-			result = result.replace(oldImgSubstring, newImgSubstring);
-
-			x = result.indexOf("<img class=\"", y + 1);
-			y = result.indexOf("\"", x + 1);
+			catch (StringIndexOutOfBoundsException sioobe) {
+				sioobe.printStackTrace();
+			}
 		}
+		
 		return result;
 	}
 	
