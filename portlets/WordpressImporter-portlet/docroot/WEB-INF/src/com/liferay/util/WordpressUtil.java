@@ -823,9 +823,8 @@ public class WordpressUtil {
 		int x = result.indexOf("<img", 0);
 		int y = result.indexOf("/>", x + 1) + 2;
 		
-		while (x > 0 && y > 0) {
-
-			try {
+		try {
+			while (x > 0 && y > 0) {			
 				String oldImgSubstring = result.substring(x, y);
 				String newImgSubstring = oldImgSubstring; 
 				
@@ -843,11 +842,11 @@ public class WordpressUtil {
 				x = result.indexOf("<img class=\"", y + 1);
 				y = result.indexOf("\"", x + 1);
 			}
-			catch (StringIndexOutOfBoundsException sioobe) {
-				sioobe.printStackTrace();
-			}
 		}
-		
+		catch (StringIndexOutOfBoundsException sioobe) {
+			sioobe.printStackTrace();
+		}
+
 		return result;
 	}
 	
