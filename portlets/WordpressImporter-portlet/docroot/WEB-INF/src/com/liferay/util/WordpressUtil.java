@@ -812,6 +812,8 @@ public class WordpressUtil {
 		result = result.replace("\n", "</p><p>");
 		
 		result = formatImages(result);
+		
+		result = formatVideos(result);
 						
 		return result;
 	}
@@ -856,7 +858,38 @@ public class WordpressUtil {
 		
 		return firstElement.getTextContent().trim();		
 	}
-	
+
+	private static String formatVideos(String result) {
+		/*
+		 * Something like this: [youtube=http://www.youtube.com/watch?v=12341234] 
+		 * should be converted to this:
+		<iframe width="420" height="315" src="http://www.youtube.com/embed/12341234" frameborder="0" allowfullscreen>< /iframe>
+		Real example <iframe width="420" height="315" src="http://www.youtube.com/embed/uo7gE-kqpGE" frameborder="0" allowfullscreen></iframe>
+		*/
+		
+		String iframePre = "<iframe width=\"420\" height=\"315\" src=\"";
+		String iframePost = "\" frameborder=\"0\" allowfullscreen></iframe>";
+		
+		int x = result.indexOf("[youtube=");
+		int y = 0;
+		
+		while (x > 0) {			
+			y = result.indexOf("]", x);
+			
+			try {
+				String videoUrl = result.substring(x + 9, y);
+				result = result.replace("[youtube=" + videoUrl + "]", iframePre + videoUrl + iframePost);
+			}
+			catch (StringIndexOutOfBoundsException sioobe) {
+				sioobe.printStackTrace();
+			}
+			
+			x = result.indexOf("[youtube=", y);
+		}
+		
+		return result;
+	}
+
 	private static String getItemFirstChildTagValue(
 		Element itemElement, String tagName) {
 		
