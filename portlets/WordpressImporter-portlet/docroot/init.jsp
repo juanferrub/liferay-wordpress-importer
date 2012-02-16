@@ -23,8 +23,10 @@
 <%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 
 <%@ page import="com.liferay.portal.kernel.language.LanguageUtil" %>
-<%@ page import="com.liferay.portlet.PortletPreferencesFactoryUtil" %>
+<%@ page import="com.liferay.portal.kernel.servlet.SessionMessages"%>
 <%@ page import="com.liferay.portal.kernel.util.*" %>
+<%@ page import="com.liferay.portlet.PortletPreferencesFactoryUtil" %>
+
 
 <%@ page import="javax.portlet.PortletPreferences" %>
 

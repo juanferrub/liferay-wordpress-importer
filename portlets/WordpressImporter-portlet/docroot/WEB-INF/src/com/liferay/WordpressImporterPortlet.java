@@ -23,6 +23,7 @@ import javax.portlet.ActionResponse;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -62,17 +63,14 @@ public class WordpressImporterPortlet extends MVCPortlet {
 			
 			// Print the result message
 			
-			printResultMessage(results);			 
+			String resultMessage = printResultMessage(results);			 
 			
-			String redirect = ParamUtil.get(
-				uploadRequest, "redirect", StringPool.BLANK);
+			SessionMessages.add(actionRequest, resultMessage);
 			
-			if (Validator.isNotNull(redirect)) {
-				actionResponse.sendRedirect(redirect);
-			}
+			sendRedirect(actionRequest, actionResponse);
 	}
 
-	private void printResultMessage(Map<String, Integer> results) {
+	private String printResultMessage(Map<String, Integer> results) {
 		
 		int categoriesCount = results.get("categoriesCount");
 		int commentsCount = results.get("commentsCount");
@@ -126,6 +124,8 @@ public class WordpressImporterPortlet extends MVCPortlet {
 		}
 		
 		System.out.println(sb.toString());
+		
+		return sb.toString();
 	}
 	
 	private static Log _log = 

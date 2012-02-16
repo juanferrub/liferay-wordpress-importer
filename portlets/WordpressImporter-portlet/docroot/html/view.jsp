@@ -17,6 +17,24 @@
 
 <%@ include file="/init.jsp" %>
 
+<%
+if (!SessionMessages.isEmpty(renderRequest)) {
+
+		java.util.Iterator<String> it = SessionMessages.iterator(renderRequest);
+		
+		while (it.hasNext()) {
+			String message = (String) it.next();			
+			%>
+			
+			<liferay-ui:success key="<%= message %>" message="<%= message %>"/>
+			
+			<%
+		}
+	}
+%>
+
+
+
 <c:choose>
 	<c:when test="<%= themeDisplay.isSignedIn() %>">
 		<label><liferay-ui:icon image="search" /><liferay-ui:message key="upload-your-wordpress-file" />:</label>
