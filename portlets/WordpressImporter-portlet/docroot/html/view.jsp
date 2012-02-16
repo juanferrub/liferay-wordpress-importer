@@ -33,7 +33,7 @@ if (!SessionMessages.isEmpty(renderRequest)) {
 	}
 %>
 
-
+<liferay-ui:error key="invalid-file" message="invalid-file" />
 
 <c:choose>
 	<c:when test="<%= themeDisplay.isSignedIn() %>">
