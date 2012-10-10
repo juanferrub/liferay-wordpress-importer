@@ -31,7 +31,7 @@ import com.liferay.util.WordpressUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
 /**
- * @author Juan Fern√°ndez
+ * @author Juan Fern·ndez
  */
 public class WordpressImporterPortlet extends MVCPortlet {
  
@@ -42,7 +42,7 @@ public class WordpressImporterPortlet extends MVCPortlet {
 		System.out.println("Starting the Wordpress importer");	
 								
 		UploadPortletRequest uploadRequest = PortalUtil.getUploadPortletRequest(
-				actionRequest);
+			actionRequest);
 
 			String fileName = uploadRequest.getFileName("file");
 			File file = uploadRequest.getFile("file");
