@@ -13,6 +13,7 @@ import javax.servlet.ServletContext;
 
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
+import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -26,7 +27,7 @@ import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portlet.PortletConfigFactoryUtil;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
 
-public class ConfigurationActionImpl implements ConfigurationAction {
+public class ConfigurationActionImpl extends DefaultConfigurationAction {
 
 	private static final String PREFERENCES_PREFIX = "preferences--";
 
@@ -74,20 +75,6 @@ public class ConfigurationActionImpl implements ConfigurationAction {
 				actionRequest, portletConfig.getPortletName() + ".doConfigure");
 		}
 		
-	}
-
-	public String render(PortletConfig arg0, RenderRequest renderRequest,
-			RenderResponse renderResponse) throws Exception {
-		
-		PortletConfig selPortletConfig = getSelPortletConfig(renderRequest);
-
-		String configJSP = selPortletConfig.getInitParameter("config-jsp");
-
-		if (Validator.isNotNull(configJSP)) {
-			return configJSP;
-		}
-
-		return "/configuration.jsp";
 	}
 	
 	protected PortletConfig getSelPortletConfig(PortletRequest portletRequest)

@@ -97,10 +97,8 @@ import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 
 public class WordpressUtil {
 
-	
-
-	public static Map<String, Integer> processFile(File file,
-			ActionRequest request) {
+	public static Map<String, Integer> processFile(
+		File file, ActionRequest request) {
 
 		Map<String, Integer> results = new HashMap<String, Integer>();
 
@@ -123,6 +121,13 @@ public class WordpressUtil {
 		List<String> importedCategoryNames = new ArrayList<String>();
 		Map<String, Layout> parentLayouts = new HashMap<String, Layout>();
 		
+		// Read user preferences
+		
+		PortletPreferences preferences = request.getPreferences();
+		
+		readPreferences(preferences);					
+
+		
 		// Add/update vocabulary
 		
 		try {
@@ -132,8 +137,9 @@ public class WordpressUtil {
 		} 
 
 		try {
-			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
-				.newInstance();
+			DocumentBuilderFactory docBuilderFactory = 
+				DocumentBuilderFactory.newInstance();
+			
 			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 
 			InputStreamReader isr = new InputStreamReader(new FileInputStream(
@@ -188,12 +194,6 @@ public class WordpressUtil {
 
 					String linkValue = getItemFirstChildTagValue(
 						itemElement, "link");
-
-					// Read user preferences
-					
-					PortletPreferences preferences = request.getPreferences();
-					
-					readPreferences(preferences);					
 					
 					// Tags filter
 					
@@ -769,11 +769,13 @@ public class WordpressUtil {
 			serviceContext);
 	}
 	
-	private static void addVocabulary(ThemeDisplay themeDisplay,
-			ServiceContext serviceContext) throws PortalException,
-			SystemException {
+	private static void addVocabulary(
+			ThemeDisplay themeDisplay, ServiceContext serviceContext) 
+		throws PortalException, SystemException {
 		
-		if (WORDPRESS_VOCABULARY == null) {
+		if ((WORDPRESS_VOCABULARY == null) || 
+			(WORDPRESS_VOCABULARY.getName() != _vocabularyName)) {
+			
 			try {
 				Map<Locale, String> vocabularyTitleMap = 
 					new HashMap<Locale, String>();

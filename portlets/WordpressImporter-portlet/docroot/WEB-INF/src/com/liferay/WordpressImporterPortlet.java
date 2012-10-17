@@ -15,20 +15,18 @@
 
 package com.liferay;
 
-import java.io.File;
-import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.WordpressUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
+
+import java.io.File;
+import java.util.Map;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
 
 /**
  * @author Juan Fernández
@@ -127,6 +125,4 @@ public class WordpressImporterPortlet extends MVCPortlet {
 		return sb.toString();
 	}
 	
-	private static Log _log = 
-		LogFactoryUtil.getLog(WordpressImporterPortlet.class);
 }
