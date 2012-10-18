@@ -73,8 +73,7 @@ public class ConfigurationActionImpl extends DefaultConfigurationAction {
 
 			SessionMessages.add(
 				actionRequest, portletConfig.getPortletName() + ".doConfigure");
-		}
-		
+		}	
 	}
 	
 	protected PortletConfig getSelPortletConfig(PortletRequest portletRequest)

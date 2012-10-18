@@ -54,10 +54,10 @@ public class WordpressImporterPortlet extends MVCPortlet {
 			}
 			
 			// Process Wordpress File
-			
+
 			Map<String, Integer> results = 
 				WordpressUtil.processFile(file, actionRequest);
-			
+		
 			// Print the result message
 			
 			String resultMessage = printResultMessage(results);			 

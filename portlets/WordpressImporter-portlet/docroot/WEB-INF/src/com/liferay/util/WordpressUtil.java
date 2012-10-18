@@ -126,11 +126,10 @@ public class WordpressUtil {
 		PortletPreferences preferences = request.getPreferences();
 		
 		readPreferences(preferences);					
-
 		
 		// Add/update vocabulary
 		
-		try {
+		try {			
 			addVocabulary(themeDisplay, serviceContext);
 		} catch (Exception e1) {
 			e1.printStackTrace();
@@ -144,13 +143,13 @@ public class WordpressUtil {
 
 			InputStreamReader isr = new InputStreamReader(new FileInputStream(
 				file), "UTF-8");
+			
 			InvalidXmlFilterReader ixfr = new InvalidXmlFilterReader(isr);
 			Document doc = docBuilder.parse(new InputSource(ixfr));
-
 			doc.getDocumentElement().normalize();
 
 			NodeList listOfItems = doc.getElementsByTagName("item");
-
+		
 			for (int s = 0; s < listOfItems.getLength(); s++) {
 
 				Node item = listOfItems.item(s);

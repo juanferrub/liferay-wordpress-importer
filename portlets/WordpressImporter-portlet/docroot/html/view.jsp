@@ -47,7 +47,7 @@ if (!SessionMessages.isEmpty(renderRequest)) {
 			<br></br>
 			
 			<div class="button-holder">
-				<input type="submit" value="Upload" />
+				<input type="submit" value="import" />
 			</div>
 		</form>
 	</c:when>
