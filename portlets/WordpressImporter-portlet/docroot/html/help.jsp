@@ -15,8 +15,8 @@
  */
 --%>
 
+<%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
+
 <%@ include file="/init.jsp" %>
 
-<label>
-	<liferay-ui:message key="wordpress-importer-help" />
-</label>
+<label><aui:message key="wordpress-importer-help" /></label>

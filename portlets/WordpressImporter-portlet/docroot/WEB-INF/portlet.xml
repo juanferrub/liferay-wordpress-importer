@@ -21,7 +21,8 @@
 		<supports>
 			<mime-type>text/html</mime-type>			
 			<portlet-mode>VIEW</portlet-mode>
-			<portlet-mode>HELP</portlet-mode>			
+			<portlet-mode>HELP</portlet-mode>
+			<portlet-mode>config</portlet-mode>
 		</supports>
 		<resource-bundle>content/Language</resource-bundle>
 		<portlet-info>

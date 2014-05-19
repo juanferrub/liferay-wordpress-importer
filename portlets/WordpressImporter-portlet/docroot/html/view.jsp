@@ -17,24 +17,6 @@
 
 <%@ include file="/init.jsp" %>
 
-<%
-if (!SessionMessages.isEmpty(renderRequest)) {
-
-		java.util.Iterator<String> it = SessionMessages.iterator(renderRequest);
-		
-		while (it.hasNext()) {
-			String message = (String) it.next();			
-			%>
-			
-			<liferay-ui:success key="<%= message %>" message="<%= message %>"/>
-			
-			<%
-		}
-	}
-%>
-
-<liferay-ui:error key="invalid-file" message="invalid-file" />
-
 <c:choose>
 	<c:when test="<%= themeDisplay.isSignedIn() %>">
 		<label><liferay-ui:icon image="search" /><liferay-ui:message key="upload-your-wordpress-file" />:</label>
@@ -47,7 +29,7 @@ if (!SessionMessages.isEmpty(renderRequest)) {
 			<br></br>
 			
 			<div class="button-holder">
-				<input type="submit" value="import" />
+				<input type="submit" value="Upload" />
 			</div>
 		</form>
 	</c:when>

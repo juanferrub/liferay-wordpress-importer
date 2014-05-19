@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.mail.internet.NewsAddress;
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletPreferences;
 import javax.xml.parsers.DocumentBuilder;
@@ -50,7 +49,6 @@ import org.xml.sax.SAXParseException;
 import com.liferay.portal.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -97,8 +95,10 @@ import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 
 public class WordpressUtil {
 
-	public static Map<String, Integer> processFile(
-		File file, ActionRequest request) {
+	
+
+	public static Map<String, Integer> processFile(File file,
+			ActionRequest request) {
 
 		Map<String, Integer> results = new HashMap<String, Integer>();
 
@@ -113,7 +113,7 @@ public class WordpressUtil {
 
 		ServiceContext serviceContext = new ServiceContext();
 		serviceContext.setAddGuestPermissions(true);
-		serviceContext.setAddCommunityPermissions(true);
+		serviceContext.setAddGroupPermissions(true);
 
 		serviceContext.setScopeGroupId(themeDisplay.getScopeGroupId());
 
@@ -121,35 +121,28 @@ public class WordpressUtil {
 		List<String> importedCategoryNames = new ArrayList<String>();
 		Map<String, Layout> parentLayouts = new HashMap<String, Layout>();
 		
-		// Read user preferences
-		
-		PortletPreferences preferences = request.getPreferences();
-		
-		readPreferences(preferences);					
-		
 		// Add/update vocabulary
 		
-		try {			
+		try {
 			addVocabulary(themeDisplay, serviceContext);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		} 
 
 		try {
-			DocumentBuilderFactory docBuilderFactory = 
-				DocumentBuilderFactory.newInstance();
-			
+			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
+				.newInstance();
 			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 
 			InputStreamReader isr = new InputStreamReader(new FileInputStream(
 				file), "UTF-8");
-			
 			InvalidXmlFilterReader ixfr = new InvalidXmlFilterReader(isr);
 			Document doc = docBuilder.parse(new InputSource(ixfr));
+
 			doc.getDocumentElement().normalize();
 
 			NodeList listOfItems = doc.getElementsByTagName("item");
-		
+
 			for (int s = 0; s < listOfItems.getLength(); s++) {
 
 				Node item = listOfItems.item(s);
@@ -191,8 +184,14 @@ public class WordpressUtil {
 
 					// Item Link
 
-					String linkValue = getItemFirstChildTagValue(
-						itemElement, "link");
+//					String linkValue = 
+					getItemFirstChildTagValue(itemElement, "link");
+
+					// Read user preferences
+					
+					PortletPreferences preferences = request.getPreferences();
+					
+					readPreferences(preferences);					
 					
 					// Tags filter
 					
@@ -370,9 +369,11 @@ public class WordpressUtil {
 					// Search for the category and add it to the service Context
 
 					List<AssetCategory> vocCategories = 
-						AssetCategoryServiceUtil.getVocabularyRootCategories(
-							WORDPRESS_VOCABULARY.getVocabularyId(), -1, -1, 
-							null);
+//						AssetCategoryServiceUtil.getVocabularyRootCategories(
+//							WORDPRESS_VOCABULARY.getVocabularyId(), -1, -1, 
+//							null);
+						AssetCategoryServiceUtil.getVocabularyRootCategories(themeDisplay.getScopeGroupId(), 
+								WORDPRESS_VOCABULARY.getVocabularyId(), -1, -1, null);
 
 					for (AssetCategory cat : vocCategories) {
 						if (cat.getTitle(LocaleUtil.getDefault()).equals(
@@ -607,7 +608,7 @@ public class WordpressUtil {
 		PrincipalThreadLocal.setName(user.getUserId());
 		
 		try {
-			MBMessage addedComment = 
+//			MBMessage addedComment = 
 				MBMessageLocalServiceUtil.addDiscussionMessage(
 					user.getUserId(), nickName, entry.getGroupId(), 
 					className, classPK, threadId, parentMessageId, subject, 
@@ -734,8 +735,8 @@ public class WordpressUtil {
 		int displayDateHour = calendar.get(Calendar.HOUR_OF_DAY);
 		int displayDateMinute = calendar.get(Calendar.MINUTE);
 
-		String structureId = StringPool.BLANK;
-		String templateId = StringPool.BLANK;
+//		String structureId = StringPool.BLANK;
+//		String templateId = StringPool.BLANK;
 		String link = StringPool.BLANK;
 
 		StringBundler sb = new StringBundler(3);
@@ -754,27 +755,53 @@ public class WordpressUtil {
 		String layoutUuid = null;
 		
 		Locale defaultLocale = LocaleUtil.fromLanguageId(
-			LocalizationUtil.getDefaultLocale(content));
+				com.liferay.portal.kernel.util.LocalizationUtil.getDefaultLanguageId(content));
 		
 		titleMap.put(defaultLocale, title);
 		descriptionMap.put(defaultLocale, description);
 
-		return JournalArticleServiceUtil.addArticle(groupId, classNameId, 
-			classPK, articleId, autoArticleId, titleMap, descriptionMap, 
-			sb.toString(), contentType, structureId, templateId, layoutUuid, 
-			displayDateMonth, displayDateDay, displayDateYear, displayDateHour, 
-			displayDateMinute, 0, 0, 0, 0, 0, neverExpire, 0, 0, 0, 0, 0, 
-			neverReview, indexable, smallImage, null, null, null, link, 
-			serviceContext);
+//		return JournalArticleServiceUtil.addArticle(groupId, classNameId, 
+//			classPK, articleId, autoArticleId, titleMap, descriptionMap, 
+//			sb.toString(), contentType, structureId, templateId, layoutUuid, 
+//			displayDateMonth, displayDateDay, displayDateYear, displayDateHour, 
+//			displayDateMinute, 0, 0, 0, 0, 0, neverExpire, 0, 0, 0, 0, 0, 
+//			neverReview, indexable, smallImage, null, null, null, link, 
+//			serviceContext);
+		long folderId = 0;
+		String type = contentType;
+		String ddmStructureKey = StringPool.BLANK;
+		String ddmTemplateKey = StringPool.BLANK;
+		int expirationDateMonth = 0;
+		int expirationDateDay = 0;
+		int expirationDateYear = 0;
+		int expirationDateHour = 0;
+		int expirationDateMinute = 0;
+		int reviewDateMonth = 0;
+		int reviewDateDay = 0;
+		int reviewDateYear = 0;
+		int reviewDateHour = 0;
+		int reviewDateMinute = 0;
+		String smallImageURL = "";
+		File smallFile = null;
+		Map<String, byte[]> images = null;
+//		String articleURL;
+		return JournalArticleServiceUtil.addArticle(groupId, folderId,
+				classNameId, classPK, articleId, autoArticleId, titleMap,
+				descriptionMap, sb.toString(), type, ddmStructureKey, ddmTemplateKey,
+				layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
+				displayDateHour, displayDateMinute, expirationDateMonth,
+				expirationDateDay, expirationDateYear, expirationDateHour,
+				expirationDateMinute, neverExpire, reviewDateMonth,
+				reviewDateDay, reviewDateYear, reviewDateHour,
+				reviewDateMinute, neverReview, indexable, smallImage,
+				smallImageURL, smallFile, images, link, serviceContext);
 	}
 	
-	private static void addVocabulary(
-			ThemeDisplay themeDisplay, ServiceContext serviceContext) 
-		throws PortalException, SystemException {
+	private static void addVocabulary(ThemeDisplay themeDisplay,
+			ServiceContext serviceContext) throws PortalException,
+			SystemException {
 		
-		if ((WORDPRESS_VOCABULARY == null) || 
-			(WORDPRESS_VOCABULARY.getName() != _vocabularyName)) {
-			
+		if (WORDPRESS_VOCABULARY == null) {
 			try {
 				Map<Locale, String> vocabularyTitleMap = 
 					new HashMap<Locale, String>();
@@ -785,9 +812,10 @@ public class WordpressUtil {
 					_vocabularyName);
 	
 				WORDPRESS_VOCABULARY = 
-					AssetVocabularyServiceUtil.addVocabulary(
-						vocabularyTitleMap, vocabularydescriptionMap, null,
-						serviceContext);
+//					AssetVocabularyServiceUtil.addVocabulary(
+//						vocabularyTitleMap, vocabularydescriptionMap, null,
+//						serviceContext);
+					AssetVocabularyServiceUtil.addVocabulary("", vocabularyTitleMap, vocabularydescriptionMap, null, serviceContext);
 				
 			} catch (DuplicateVocabularyException dve) {
 				List<AssetVocabulary> vocabularies = 
@@ -813,8 +841,6 @@ public class WordpressUtil {
 		result = result.replace("\n", "</p><p>");
 		
 		result = formatImages(result);
-		
-		result = formatVideos(result);
 						
 		return result;
 	}
@@ -826,30 +852,25 @@ public class WordpressUtil {
 		int x = result.indexOf("<img", 0);
 		int y = result.indexOf("/>", x + 1) + 2;
 		
-		try {
-			while (x > 0 && y > 0) {			
-				String oldImgSubstring = result.substring(x, y);
-				String newImgSubstring = oldImgSubstring; 
-				
-				if (oldImgSubstring.contains("alignleft")) {
-					newImgSubstring = oldImgSubstring.replace(
-						"/>", styleFloatLeft + "/>");
-				} 
-				else if (oldImgSubstring.contains("alignright")) {
-					newImgSubstring = oldImgSubstring.replace(
-						"/>", styleFloatRight + "/>");
-				}
-				
-				result = result.replace(oldImgSubstring, newImgSubstring);
-	
-				x = result.indexOf("<img class=\"", y + 1);
-				y = result.indexOf("\"", x + 1);
-			}
-		}
-		catch (StringIndexOutOfBoundsException sioobe) {
-			sioobe.printStackTrace();
-		}
+		while (x > 0 && y > 0) {
 
+			String oldImgSubstring = result.substring(x, y);
+			String newImgSubstring = oldImgSubstring; 
+			
+			if (oldImgSubstring.contains("alignleft")) {
+				newImgSubstring = oldImgSubstring.replace(
+					"/>", styleFloatLeft + "/>");
+			} 
+			else if (oldImgSubstring.contains("alignright")) {
+				newImgSubstring = oldImgSubstring.replace(
+					"/>", styleFloatRight + "/>");
+			}
+			
+			result = result.replace(oldImgSubstring, newImgSubstring);
+
+			x = result.indexOf("<img class=\"", y + 1);
+			y = result.indexOf("\"", x + 1);
+		}
 		return result;
 	}
 	
@@ -859,38 +880,7 @@ public class WordpressUtil {
 		
 		return firstElement.getTextContent().trim();		
 	}
-
-	private static String formatVideos(String result) {
-		/*
-		 * Something like this: [youtube=http://www.youtube.com/watch?v=12341234] 
-		 * should be converted to this:
-		<iframe width="420" height="315" src="http://www.youtube.com/embed/12341234" frameborder="0" allowfullscreen>< /iframe>
-		Real example <iframe width="420" height="315" src="http://www.youtube.com/embed/uo7gE-kqpGE" frameborder="0" allowfullscreen></iframe>
-		*/
-		
-		String iframePre = "<iframe width=\"420\" height=\"315\" src=\"";
-		String iframePost = "\" frameborder=\"0\" allowfullscreen></iframe>";
-		
-		int x = result.indexOf("[youtube=");
-		int y = 0;
-		
-		while (x > 0) {			
-			y = result.indexOf("]", x);
-			
-			try {
-				String videoUrl = result.substring(x + 9, y);
-				result = result.replace("[youtube=" + videoUrl + "]", iframePre + videoUrl + iframePost);
-			}
-			catch (StringIndexOutOfBoundsException sioobe) {
-				sioobe.printStackTrace();
-			}
-			
-			x = result.indexOf("[youtube=", y);
-		}
-		
-		return result;
-	}
-
+	
 	private static String getItemFirstChildTagValue(
 		Element itemElement, String tagName) {
 		
